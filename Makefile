@@ -54,11 +54,15 @@ docker-down:
 db-migrate:
 	uv run alembic upgrade head
 
+db-reset:
+	uv run alembic downgrade base
+	uv run alembic upgrade head
+
 db-seed:
 	uv run python scripts/seed_db.py
 
 # Combined command for quick start
-run: install docker-build docker-up db-migrate db-seed
+run: install docker-build docker-up db-reset db-seed
 	@echo "Services are running!"
 	@echo "API available at http://localhost:3700"
 	@echo "API docs at http://localhost:3700/docs"

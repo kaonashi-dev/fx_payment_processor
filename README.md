@@ -2,6 +2,18 @@
 
 A multi-currency wallet system API built with FastAPI that supports USD and MXN currencies with real-time exchange rate updates.
 
+## Technology Stack
+
+- **Framework**: FastAPI
+- **Database**: PostgreSQL
+- **ORM**: SQLModel
+- **Migrations**: Alembic
+- **Validation**: Pydantic
+- **Logging**: structlog
+- **Scheduler**: APScheduler
+- **Package Manager**: uv
+- **Containerization**: Docker & Docker Compose
+
 ## Architecture
 
 ### Overview
@@ -9,31 +21,31 @@ A multi-currency wallet system API built with FastAPI that supports USD and MXN 
 The application follows a layered architecture pattern with clear separation of concerns:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      API Layer (Routes)                      │
-│              FastAPI endpoints for HTTP requests             │
-└──────────────────────┬──────────────────────────────────────┘
+┌───────────────────────────────────────────────────────┐
+│                      API Layer (Routes)               │
+│              FastAPI endpoints for HTTP requests      │
+└──────────────────────┬────────────────────────────────┘
                        │
-┌──────────────────────▼──────────────────────────────────────┐
-│                   Service Layer                              │
-│         Business logic and orchestration                     │
-│  - WalletService: Wallet operations                          │
-│  - FXRateService: Exchange rate management                   │
-└──────────────────────┬──────────────────────────────────────┘
+┌──────────────────────▼────────────────────────────────┐
+│                   Service Layer                       │
+│  - Business logic and orchestration                   │
+│  - WalletService: Wallet operations                   │
+│  - FXRateService: Exchange rate management            │
+└──────────────────────┬────────────────────────────────┘
                        │
-┌──────────────────────▼──────────────────────────────────────┐
-│                Repository Layer                              │
-│           Data access abstraction                            │
-│  - WalletRepository: Wallet CRUD operations                 │
-│  - TransactionRepository: Transaction queries                │
-└──────────────────────┬──────────────────────────────────────┘
+┌──────────────────────▼────────────────────────────────┐
+│                Repository Layer                       │
+│  - Data access abstraction                            │
+│  - WalletRepository: Wallet CRUD operations           │
+│  - TransactionRepository: Transaction queries         │
+└──────────────────────┬────────────────────────────────┘
                        │
-┌──────────────────────▼──────────────────────────────────────┐
-│                    Database Layer                            │
-│              PostgreSQL with SQLModel                        │
-│  - Wallet: User currency balances                            │
-│  - Transaction: Transaction history                          │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────▼────────────────────────────────┐
+│                    Database Layer                     │
+│  - PostgreSQL with SQLModel                           │
+│  - Wallet: User currency balances                     │
+│  - Transaction: Transaction history                   │
+└───────────────────────────────────────────────────────┘
 ```
 
 ### Components
@@ -102,7 +114,7 @@ The service uses APScheduler to update rates periodically when not in static mod
 
 ### Endpoints
 
-#### 1. Fund Wallet
+#### Fund Wallet
 **POST** `/wallets/{user_id}/fund`
 
 Add funds to a user's wallet in the specified currency.
@@ -126,7 +138,7 @@ Add funds to a user's wallet in the specified currency.
 }
 ```
 
-#### 2. Convert Currency
+#### Convert Currency
 **POST** `/wallets/{user_id}/convert`
 
 Convert funds between USD and MXN using current exchange rates.
@@ -153,7 +165,7 @@ Convert funds between USD and MXN using current exchange rates.
 }
 ```
 
-#### 3. Withdraw Funds
+#### Withdraw Funds
 **POST** `/wallets/{user_id}/withdraw`
 
 Withdraw funds from a user's wallet.
@@ -177,7 +189,7 @@ Withdraw funds from a user's wallet.
 }
 ```
 
-#### 4. Get Balances
+#### Get Balances
 **GET** `/wallets/{user_id}/balances`
 
 Retrieve all wallet balances for a user across all currencies.
@@ -192,44 +204,7 @@ Retrieve all wallet balances for a user across all currencies.
 }
 ```
 
-#### 5. Get Transaction History
-**GET** `/wallets/{user_id}/transactions?limit=100`
-
-Retrieve transaction history for a user (newest first).
-
-**Query Parameters:**
-- `limit` (optional): Maximum number of transactions to return (default: 100)
-
-**Response (200):**
-```json
-{
-  "user_id": "user123",
-  "transactions": [
-    {
-      "id": 3,
-      "user_id": "user123",
-      "transaction_type": "withdraw",
-      "currency": "USD",
-      "amount": "50.00",
-      "created_at": "2025-12-08T10:30:00"
-    },
-    {
-      "id": 2,
-      "user_id": "user123",
-      "transaction_type": "convert",
-      "from_currency": "USD",
-      "to_currency": "MXN",
-      "from_amount": "100.00",
-      "to_amount": "1870.00",
-      "fx_rate": "18.70",
-      "created_at": "2025-12-08T10:20:00"
-    }
-  ],
-  "total": 2
-}
-```
-
-#### 6. Get FX Rates
+#### Get FX Rates
 **GET** `/fx-rates`
 
 Get current exchange rates.
@@ -256,39 +231,44 @@ Interactive API documentation is available at:
 - Python 3.13+
 - [uv](https://github.com/astral-sh/uv) package manager
 - Docker and Docker Compose (for containerized deployment)
-- PostgreSQL (if running locally without Docker)
 
-### Installation
+### Simple setup (Recommended)
 
 Install dependencies:
+This commands:
+1. Builds Docker containers
+2. Starts all services (API + PostgreSQL)
+3. Reset and runs database migrations
+4. Seeds the database with test data
 ```bash
 make install
+make run
 # or
 uv sync
 ```
 
 ### Local Development
 
-#### 1. Start Database (Docker)
+#### Start Database (Docker)
 ```bash
 docker-compose up -d postgres
 ```
 
-#### 2. Run Migrations
+#### Run Migrations
 ```bash
 make db-migrate
 # or
 uv run alembic upgrade head
 ```
 
-#### 3. Seed Database (Optional)
+#### Seed Database (Optional)
 ```bash
 make db-seed
 # or
 uv run python scripts/seed_db.py
 ```
 
-#### 4. Run Development Server
+#### Run Development Server
 ```bash
 make dev
 # or
@@ -296,20 +276,6 @@ uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 3700
 ```
 
 The API will be available at `http://localhost:3700`
-
-### Docker Deployment
-
-#### Quick Start (Recommended)
-Build, start containers, run migrations, and seed database:
-```bash
-make run
-```
-
-This command:
-1. Builds Docker containers
-2. Starts all services (API + PostgreSQL)
-3. Runs database migrations
-4. Seeds the database with test data
 
 #### Manual Docker Commands
 
@@ -340,44 +306,6 @@ make docker-logs
 # or
 docker-compose logs -f
 ```
-
-### Available Make Commands
-
-```bash
-make help              # Show all available commands
-make install           # Install dependencies with uv
-make dev               # Run development server locally
-make test              # Run tests with pytest
-make clean             # Clean cache and temp files
-make docker-build       # Build Docker containers
-make docker-up         # Start Docker containers
-make docker-down       # Stop Docker containers
-make db-migrate        # Run database migrations
-make db-seed           # Seed database with test data
-make run               # Full setup: build + up + migrate + seed
-```
-
-### Environment Variables
-
-Create a `.env` file in the project root:
-
-```env
-# Database
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/fx_payment_processor
-
-# FX Rate Configuration
-FX_RATE_MODE=random                    # static, random, or api
-FX_RATE_UPDATE_INTERVAL=15             # seconds
-FX_RATE_RANDOM_VALUES=18.50,18.60,18.70,18.80,18.90,19.00
-FX_RATE_USD_TO_MXN=18.70
-FX_RATE_MXN_TO_USD=0.053
-
-# API Mode (if using external API)
-EXCHANGERATE_API_URL=https://api.exchangerate-api.com/v4/latest/USD
-EXCHANGERATE_API_KEY=your_api_key_here
-EXCHANGERATE_API_TIMEOUT=10
-```
-
 ### Testing
 
 Run tests:
@@ -410,27 +338,4 @@ fx_payment_processor/
 └── pyproject.toml        # Project dependencies
 ```
 
-## Features
-
-- ✅ Multi-currency wallet support (USD, MXN)
-- ✅ Real-time currency conversion
-- ✅ Transaction history tracking
-- ✅ Dynamic exchange rate updates (static/random/API modes)
-- ✅ Structured logging
-- ✅ Database migrations with Alembic
-- ✅ Docker containerization
-- ✅ RESTful API with OpenAPI documentation
-- ✅ Input validation and error handling
-
-## Technology Stack
-
-- **Framework**: FastAPI
-- **Database**: PostgreSQL
-- **ORM**: SQLModel
-- **Migrations**: Alembic
-- **Validation**: Pydantic
-- **Logging**: structlog
-- **Scheduler**: APScheduler
-- **Package Manager**: uv
-- **Containerization**: Docker & Docker Compose
 

@@ -68,4 +68,6 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_transaction_user_id'), table_name='transaction')
     op.drop_index(op.f('ix_transaction_transaction_type'), table_name='transaction')
     op.drop_table('transaction')
+    op.execute("DROP TYPE IF EXISTS transactiontype CASCADE")
+    op.execute("DROP TYPE IF EXISTS currency CASCADE")
     # ### end Alembic commands ###
