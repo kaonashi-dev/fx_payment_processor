@@ -37,7 +37,6 @@ class Settings(BaseSettings):
     )
 
     # API mode: exchangerate-api configuration
-    exchangerate_api_key: str = Field(env="EXCHANGERATE_API_KEY")
     exchangerate_api_url: str = Field(env="EXCHANGERATE_API_URL")
     exchangerate_api_timeout: int = Field(
         default=10, env="EXCHANGERATE_API_TIMEOUT"

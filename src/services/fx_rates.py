@@ -96,17 +96,17 @@ class FXRateService:
             url = settings.exchangerate_api_url
             params = {}
 
-            if settings.exchangerate_api_key:
-                params["access_key"] = settings.exchangerate_api_key
-
             response = requests.get(
                 url, params=params, timeout=settings.exchangerate_api_timeout
             )
             response.raise_for_status()
             data = response.json()
 
-            if "rates" in data and "MXN" in data["rates"]:
-                new_rate = float(data["rates"]["MXN"])
+            print("data", type(data))
+            print(data)
+
+            if "conversion_rates" in data and "MXN" in data["conversion_rates"]:
+                new_rate = float(data["conversion_rates"]["MXN"])
                 old_rate = self._usd_to_mxn
 
                 self._usd_to_mxn = new_rate
