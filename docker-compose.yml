@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=fx_payment_processor
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    ports:
+      - "3700:80"
+    volumes:
+      - ./src:/app/src
+      - ./alembic:/app/alembic
+      - ./scripts:/app/scripts
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/fx_payment_processor
+      - DEBUG=True
+      - FX_RATE_MODE=${FX_RATE_MODE:-random}
+      - FX_RATE_UPDATE_INTERVAL=${FX_RATE_UPDATE_INTERVAL:-15}
+      - FX_RATE_RANDOM_VALUES=${FX_RATE_RANDOM_VALUES:-18.50,18.60,18.70,18.80,18.90,19.00}
+      - EXCHANGERATE_API_KEY=${EXCHANGERATE_API_KEY:-}
+      - EXCHANGERATE_API_URL=${EXCHANGERATE_API_URL:-https://api.exchangerate-api.com/v4/latest/USD}
+    command: /app/.venv/bin/uvicorn src.main:app --host 0.0.0.0 --port 80 --reload
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+
