@@ -17,6 +17,7 @@ help:
 	@echo "  make db-seed          - Seed database with test data"
 	@echo ""
 	@echo "  make run              - Run with docker-compose (build + up)"
+	@echo "  make stop             - Stop docker-compose"
 
 # Local development
 install:
@@ -57,8 +58,10 @@ db-seed:
 	uv run python scripts/seed_db.py
 
 # Combined command for quick start
-run: docker-build docker-up db-migrate db-seed
+run: install docker-build docker-up db-migrate db-seed
 	@echo "Services are running!"
 	@echo "API available at http://localhost:3700"
 	@echo "API docs at http://localhost:3700/docs"
 
+stop:
+	docker-compose down
