@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from src.services.wallet_service import WalletService
+from src.api.dependencies import validate_user_exists
 from src.schemas.wallet import (
     FundRequest,
     FundResponse,
@@ -12,7 +13,7 @@ from src.schemas.wallet import (
     TransactionResponse,
 )
 
-router = APIRouter(prefix="/wallets", tags=["wallets"])
+router = APIRouter(prefix="/wallets", tags=["Wallets API"])
 
 
 @router.post(
@@ -37,11 +38,15 @@ router = APIRouter(prefix="/wallets", tags=["wallets"])
             },
         },
         400: {"description": "Invalid request (e.g., negative amount)"},
+        404: {"description": "User not found"},
         422: {"description": "Validation error (e.g., unsupported currency)"},
         500: {"description": "Internal server error"},
     },
 )
-async def fund_wallet(user_id: str, request: FundRequest):
+async def fund_wallet(
+    request: FundRequest,
+    user_id: str = Depends(validate_user_exists)
+):
     try:
         result = WalletService.fund_wallet(
             user_id=user_id,
@@ -82,11 +87,15 @@ async def fund_wallet(user_id: str, request: FundRequest):
             },
         },
         400: {"description": "Insufficient balance or same currency conversion"},
+        404: {"description": "User not found"},
         422: {"description": "Validation error (e.g., unsupported currency pair)"},
         500: {"description": "Internal server error"},
     },
 )
-async def convert_currency(user_id: str, request: ConvertRequest):
+async def convert_currency(
+    request: ConvertRequest,
+    user_id: str = Depends(validate_user_exists)
+):
     try:
         result = WalletService.convert_currency(
             user_id=user_id,
@@ -126,11 +135,15 @@ async def convert_currency(user_id: str, request: ConvertRequest):
             },
         },
         400: {"description": "Insufficient balance"},
+        404: {"description": "User not found"},
         422: {"description": "Validation error"},
         500: {"description": "Internal server error"},
     },
 )
-async def withdraw_funds(user_id: str, request: WithdrawRequest):
+async def withdraw_funds(
+    request: WithdrawRequest,
+    user_id: str = Depends(validate_user_exists)
+):
     try:
         result = WalletService.withdraw_funds(
             user_id=user_id,
@@ -162,10 +175,13 @@ async def withdraw_funds(user_id: str, request: WithdrawRequest):
                 }
             },
         },
+        404: {"description": "User not found"},
         500: {"description": "Internal server error"},
     },
 )
-async def get_balances(user_id: str):
+async def get_balances(
+    user_id: str = Depends(validate_user_exists)
+):
     try:
         balances = WalletService.get_balances(user_id)
         return BalancesResponse(balances=balances)
@@ -215,14 +231,30 @@ async def get_balances(user_id: str):
                 }
             },
         },
+        404: {"description": "User not found"},
         500: {"description": "Internal server error"},
     },
 )
-async def get_transactions(user_id: str, limit: int = 100):
+async def get_transactions(
+    user_id: str = Depends(validate_user_exists),
+    limit: int = 100
+):
     try:
         transactions = WalletService.get_transactions(user_id, limit=limit)
         transaction_responses = [
-            TransactionResponse.model_validate(transaction)
+            TransactionResponse(
+                id=transaction.id,
+                user_id=str(transaction.user_id),
+                transaction_type=transaction.transaction_type,
+                currency=transaction.currency,
+                amount=transaction.amount,
+                from_currency=transaction.from_currency,
+                to_currency=transaction.to_currency,
+                from_amount=transaction.from_amount,
+                to_amount=transaction.to_amount,
+                fx_rate=transaction.fx_rate,
+                created_at=transaction.created_at,
+            )
             for transaction in transactions
         ]
         return TransactionListResponse(

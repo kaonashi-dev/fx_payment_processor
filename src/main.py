@@ -33,6 +33,6 @@ app = FastAPI(
 
 app.include_router(wallet_router)
 
-@app.get("/fx-rates")
+@app.get("/fx-rates", tags=["Demo"])
 async def get_fx_rates():
     return fx_rate_service.get_rates()
