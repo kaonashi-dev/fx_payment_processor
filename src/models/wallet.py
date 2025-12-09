@@ -12,7 +12,7 @@ class Wallet(SQLModel, table=True):
     )
     
     id: int = Field(primary_key=True)
-    user_id: str = Field(index=True, description="User identifier")
+    user_id: int = Field(index=True, description="User identifier")
     currency: Currency = Field(index=True, max_length=3, description="Currency code (USD, MXN)")
     balance: Decimal = Field(
         default=Decimal("0.00"),
