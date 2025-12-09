@@ -3,7 +3,8 @@ import structlog
 from typing import Any
 
 
-def setup_logging(log_level: str = "INFO") -> None:
+def setup_logging() -> None:
+    log_level = "INFO"
     # Configure standard logging
     logging.basicConfig(
         format="%(message)s",
