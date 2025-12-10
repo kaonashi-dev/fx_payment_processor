@@ -241,11 +241,10 @@ This commands:
 3. Reset and runs database migrations
 4. Seeds the database with test data
 ```bash
+uv sync
 source .venv/bin/activate
 make install
 make run
-# or
-uv sync
 ```
 
 ### Local Development
