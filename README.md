@@ -50,8 +50,9 @@ The application follows a layered architecture pattern with clear separation of 
 
 ### Components
 
-#### 1. **API Layer** (`src/api/routes/`)
-- **wallet.py**: RESTful endpoints for wallet operations
+#### 1. **API Layer** (`src/api/`)
+- **routes/wallet.py**: RESTful endpoints for wallet operations
+- **dependencies.py**: FastAPI dependencies for user validation
 - Handles HTTP requests/responses
 - Input validation via Pydantic schemas
 - Error handling and status codes
@@ -76,6 +77,9 @@ The application follows a layered architecture pattern with clear separation of 
 - **transaction_repository.py**: Transaction data access
   - Create transactions
   - Query transactions by user
+- **user_repository.py**: User data access
+  - Check user existence
+  - User CRUD operations
 
 #### 4. **Models** (`src/models/`)
 - **wallet.py**: Wallet entity (user_id, currency, balance)
@@ -94,6 +98,7 @@ The application follows a layered architecture pattern with clear separation of 
 
 #### 7. **Database** (`src/database/`)
 - **engine.py**: SQLModel database engine and session management
+- **seeders.py**: Database seeding utilities for test data
 - Alembic migrations for schema versioning
 
 ### FX Rate Service
@@ -204,6 +209,43 @@ Retrieve all wallet balances for a user across all currencies.
 }
 ```
 
+#### Get Transaction History
+**GET** `/wallets/{user_id}/transactions`
+
+Retrieve transaction history for a user, ordered by creation date (newest first).
+
+**Query Parameters:**
+- `limit` (optional): Maximum number of transactions to return (default: 100)
+
+**Response (200):**
+```json
+{
+  "user_id": "user123",
+  "transactions": [
+    {
+      "id": 3,
+      "user_id": "user123",
+      "transaction_type": "withdraw",
+      "currency": "USD",
+      "amount": "50.00",
+      "created_at": "2025-12-08T10:30:00"
+    },
+    {
+      "id": 2,
+      "user_id": "user123",
+      "transaction_type": "convert",
+      "from_currency": "USD",
+      "to_currency": "MXN",
+      "from_amount": "100.00",
+      "to_amount": "1870.00",
+      "fx_rate": "18.70",
+      "created_at": "2025-12-08T10:20:00"
+    }
+  ],
+  "total": 2
+}
+```
+
 #### Get FX Rates
 **GET** `/fx-rates`
 
@@ -234,18 +276,18 @@ Interactive API documentation is available at:
 
 ### Simple setup (Recommended)
 
-Install dependencies:
-This commands:
-1. Builds Docker containers
-2. Starts all services (API + PostgreSQL)
-3. Reset and runs database migrations
-4. Seeds the database with test data
+This setup will:
+1. Install dependencies
+2. Build Docker containers
+3. Start all services (API + PostgreSQL)
+4. Reset and run database migrations
+5. Seed the database with test data
+
 ```bash
-uv sync
-source .venv/bin/activate
-make install
 make run
 ```
+
+The API will be available at `http://localhost:3700`
 
 ### Local Development
 
@@ -308,11 +350,26 @@ docker-compose logs -f
 ```
 ### Testing
 
-Run tests:
+The project includes comprehensive test coverage across multiple layers:
+
+**Test Structure:**
+- `tests/api/` - API endpoint tests
+- `tests/e2e/` - End-to-end workflow tests
+- `tests/models/` - Model validation tests
+- `tests/repositories/` - Repository layer tests
+- `tests/services/` - Service layer tests
+
+Run all tests:
 ```bash
 make test
 # or
 uv run pytest
+```
+
+Run specific test files:
+```bash
+uv run pytest tests/api/test_wallet_routes.py
+uv run pytest tests/services/test_wallet_service.py
 ```
 
 ### Project Structure
